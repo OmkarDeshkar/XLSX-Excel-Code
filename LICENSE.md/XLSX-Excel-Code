@@ -1,0 +1,71 @@
+/*Excel JS code*/
+/*Method to handel the mismatced extension of file*/
+		handleTypeMissmatchExcel: function(oEvent) {
+			debugger;
+			var aFileTypes = oEvent.getSource().getFileType();
+			jQuery.each(aFileTypes, function(key, value) {
+				aFileTypes[key] = "*." + value;
+			});
+			var sSupportedFileTypes = aFileTypes.join(", ");
+			// sap.m.MessageToast.show("The file type *." + oEvent.getParameter("fileType") +
+			// 	" is not supported. Choose one of the following types: " +
+			// 	sSupportedFileTypes);
+			sap.m.MessageBox.show(
+				"The file type *." + oEvent.getParameter("fileType") +
+				" is not supported. Choose one of the following types: " +
+				sSupportedFileTypes, {
+					icon: sap.m.MessageBox.Icon.ERROR,
+					title: "Error",
+					actions: [sap.m.MessageBox.Action.OK]
+				}
+			);
+		},
+
+/*Upload excel button function*/
+		UploadExcel: function(e) {
+			debugger;
+			var file = e.getParameter("files") && e.getParameter("files")[0];
+			var format = file.name.split('.')[1];
+			switch (file.name.split('.')[1]) {
+				case 'xlsx':
+					this.handleExcelUploadPress(e);
+					break;
+					// case 'csv':
+					// 	this.Upload_csv(e);
+					// 	break;
+			}
+		},
+
+		handleExcelUploadPress: function(e) {
+			this._import(e.getParameter("files") && e.getParameter("files")[0]);
+		},
+
+		_import: function(file) {
+
+			debugger;
+
+			if (file && window.FileReader) {
+				var reader = new FileReader();
+				var result = {},
+					data,
+					t = this;
+				reader.onload = function(e) {
+					data = e.target.result;
+					var wb = XLSX.read(data, {
+						type: 'binary'
+					});
+					
+					/* Main function */
+					wb.SheetNames.forEach(function(sheetName) {
+						var roa = XLSX.utils.sheet_to_row_object_array(wb.Sheets[sheetName]);
+						if (roa.length > 0) {
+							result[sheetName] = roa;
+						}
+					});
+					debugger;
+					t.get_table(result[wb.SheetNames[0]]); /* External Validation function */
+					return result;
+				}
+				reader.readAsBinaryString(file);
+			}
+		},
